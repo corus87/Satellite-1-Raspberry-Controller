@@ -9,7 +9,7 @@ class Interface:
     def __init__(self):
         self.spi = SpiInterface()
         self.colors = [(0, 0, 0) for _ in range(self.num_leds)]
-        self.set_brightness(1)
+        self.set_brightness(100)
 
     def clear_leds(self):
         for led in range(self.num_leds):

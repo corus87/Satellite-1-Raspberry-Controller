@@ -23,7 +23,7 @@ Install dependencies
 sudo apt install python3-dev git
 ```
 
-Create a virtualenv 
+Create a virtualenv and install the controller
 ```bash
 python -m venv sat1_venv
 sat1_venv/bin/pip install git+https://github.com/corus87/Satellite-1-Raspberry-Controller
@@ -73,7 +73,7 @@ options:
   --decrease, -d        Decrease Volume
   --mute_on, -m         Mute on
   --mute_off, -u        Mute off
-  --button_control, -b  Control volume with HW buttons (Left: Mute/Unmute, Up: Increase, Down: Decrease volume)
+  --button_control, -b  Control volume with HW buttons (Left: Mute/Unmute, Up: Increase volume, Down: Decrease volume)
   --get_volume, -g      Get volume
 ```
 

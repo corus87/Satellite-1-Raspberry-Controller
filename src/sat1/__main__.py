@@ -61,7 +61,7 @@ def main():
                                 action="store_true")
 
     speaker_parser.add_argument("--button_control", "-b",
-                                help="Control volume with HW buttons (Left: Mute/Unmute, Up: Increase, Down: Decrease volume)",
+                                help="Control volume with HW buttons (Left: Mute/Unmute, Up: Increase volume, Down: Decrease volume)",
                                 action="store_true")
 
     speaker_parser.add_argument("--get_volume", "-g",
@@ -113,7 +113,7 @@ def main():
             print(ctl.volume)
         elif args.button_control:
             try:
-                print("Volume control enabled.\nPress strg + c to cancel.")
+                print("Volume control enabled.\nPress ctrl + c to cancel.")
                 ctl.button_control()
             except KeyboardInterrupt:
                 pass
