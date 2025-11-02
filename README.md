@@ -86,7 +86,7 @@ Run the following commands to setup the PI.
 Compile and write the overlay to /boot/overlays  
 
 ```bash
-wget https://github.com/corus87/Satellite-1-Raspberry-Controller/raw/branch/main/extras/genericstereoaudiocodec.dts -O /tmp/genericstereoaudiocodec.dts
+wget https://raw.githubusercontent.com/corus87/Satellite-1-Raspberry-Controller/refs/heads/main/extras/genericstereoaudiocodec.dts -O /tmp/genericstereoaudiocodec.dts
 sudo dtc -@ -H epapr -O dtb -o /boot/overlays/genericstereoaudiocodec.dtbo -Wno-unit_address_vs_reg /tmp/genericstereoaudiocodec.dts
 ```
 
@@ -113,7 +113,7 @@ To be able to change the speaker and microphone volume via ALSA, you can use a a
 Get the asoundrc and write to users home directory 
 
 ```bash
-wget https://github.com/corus87/Satellite-1-Raspberry-Controller/raw/branch/main/extras/asoundrc -O ~/.asoundrc
+wget https://raw.githubusercontent.com/corus87/Satellite-1-Raspberry-Controller/refs/heads/main/extras/asoundrc -O ~/.asoundrc
 ```
 
 Reboot the PI 
