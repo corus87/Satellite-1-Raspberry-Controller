@@ -1,4 +1,4 @@
-from sat1.utils.spi_interface import SpiInterface
+from sat1_control.utils.spi_interface import SpiInterface
 
 LED_RES_ID = 200
 CMD_WRITE_LED_RING_RAW = 0

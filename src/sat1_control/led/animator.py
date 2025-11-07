@@ -1,5 +1,5 @@
 
-from sat1.led.interface import Interface
+from sat1_control.led.interface import Interface
 
 from time import sleep, time
 from threading import Thread

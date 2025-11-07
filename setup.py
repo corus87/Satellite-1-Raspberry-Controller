@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="sat1_control",
-    version="1.0.0",    
+    version="1.0.1",    
     description="Basic control for FutureProofHomes Satellite 1 with a Raspberry PI",
     url="https://github.com/corus87/Satellite-1-Raspberry-Controller/",
     author="Corus87",
@@ -14,7 +14,7 @@ setup(
                       ],
     entry_points={
         'console_scripts': [
-            'sat1-control = sat1.__main__:main'
+            'sat1-control = sat1_control.__main__:main'
         ]
     },
     classifiers=[

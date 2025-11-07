@@ -1,5 +1,5 @@
-from sat1.utils.i2c_interface import I2cInterface
-from sat1.tas2780.consts import *
+from sat1_control.utils.i2c_interface import I2cInterface
+from sat1_control.tas2780.consts import *
 
 def clamp(val, min_val, max_val):
     return max(min_val, min(max_val, val))

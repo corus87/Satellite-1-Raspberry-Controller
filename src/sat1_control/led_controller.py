@@ -2,7 +2,7 @@ import queue as Queue
 from threading import Thread
 from time import sleep
 
-from sat1.led.animator import Animator
+from sat1_control.led.animator import Animator
 
 class LedController(Thread):
     def __init__(self, pattern="default", 
@@ -40,7 +40,7 @@ class LedController(Thread):
         
     def set_pattern(self, pattern):
         if pattern == "default":
-            from sat1.led.pattern.default_pattern import DefaultPattern
+            from sat1_control.led.pattern.default_pattern import DefaultPattern
             self.pattern = DefaultPattern(self.animator)
         else:
             raise ValueError(f"Pattern {pattern} not found")

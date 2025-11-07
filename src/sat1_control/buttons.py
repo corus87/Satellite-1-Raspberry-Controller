@@ -1,4 +1,4 @@
-from sat1.utils.spi_interface import SpiInterface
+from sat1_control.utils.spi_interface import SpiInterface
 from dataclasses import dataclass
 
 
@@ -26,26 +26,35 @@ class Buttons:
 
     @property
     def up(self):
-        state = self.get_state(2, [0])
+        state = self.get_state([[0, 3, 0, 0], 
+                                [0, 7, 0, 0]])
+
         return UpButton(is_pressed=state)
 
     @property
     def down(self):
-        state = self.get_state(1, [1, 5])
+        state = self.get_state([[0, 1, 128, 0], 
+                                [0, 5, 128, 0]])
+        
         return DownButton(is_pressed=state)
 
     @property
     def right(self):
-        state = self.get_state(1, [2, 6])
+        state = self.get_state([[0, 2, 128, 0], 
+                                [0, 6, 128, 0]])
+        
         return RightButton(is_pressed=state)
 
     @property
     def left(self):
-        state = self.get_state(1, [5, 6, 7])
+        state = self.get_state([[0, 5, 128, 0], 
+                                [0, 6, 128, 0], 
+                                [0, 7, 0, 0], 
+                                [0, 7, 128, 0]])
         return LeftButton(is_active=state)
 
-    def get_state(self, idx, states):
+    def get_state(self, states):
         res = self.spi.request_status_register_update()
-        if res and res[idx] in states:
+        if res and res in states:
             return True
         return False

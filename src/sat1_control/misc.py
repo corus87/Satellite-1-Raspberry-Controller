@@ -1,4 +1,4 @@
-from sat1.utils.spi_interface import SpiInterface
+from sat1_control.utils.spi_interface import SpiInterface
 
 DFU_CONTROLLER_SERVICER_RESID = 240
 CONTROL_CMD_READ_BIT = 0x80

@@ -3,8 +3,8 @@
 import argparse
 from time import sleep
 
-from sat1 import LedController
-from sat1 import SpeakerController
+from sat1_control_controller import LedController
+from sat1_control_controller import SpeakerController
 
 def main():
 
@@ -114,7 +114,7 @@ def main():
         elif args.button_control:
             try:
                 print("Volume control enabled.\nPress ctrl + c to cancel.")
-                ctl.button_control()
+                ctl.button_control(blocked=True)
             except KeyboardInterrupt:
                 pass
         else:
