@@ -3,8 +3,8 @@
 import argparse
 from time import sleep
 
-from sat1_control_controller import LedController
-from sat1_control_controller import SpeakerController
+from sat1_control import LedController
+from sat1_control import SpeakerController
 
 def main():
 
