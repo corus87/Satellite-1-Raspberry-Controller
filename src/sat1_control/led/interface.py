@@ -6,8 +6,8 @@ CMD_WRITE_LED_RING_RAW = 0
 class Interface:
     num_leds = 24
 
-    def __init__(self):
-        self.spi = SpiInterface()
+    def __init__(self, spi: SpiInterface | None = None):
+        self.spi = spi or SpiInterface()
         self.colors = [(0, 0, 0) for _ in range(self.num_leds)]
         self.set_brightness(100)
 

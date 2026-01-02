@@ -1,20 +1,21 @@
-
-from sat1_control.led.interface import Interface
-
 from time import sleep, time
 from threading import Thread
 
+from sat1_control.led.interface import Interface
+
 class Animator(Interface):
-    def __init__(self, timeout):
+    def __init__(self):
         super(Animator, self).__init__()
         self.is_running = False
         self.animation_thread = None
         self.timeout_thread = None
-        self.timeout = timeout
+        self.timeout = 60
 
-    def run(self, func):
+    def run(self, func, **kwargs):
+        clear_leds = kwargs.get("clear_leds", True)
+
         if self.is_running:
-            self.stop()
+            self.stop(clear_leds)
 
         if self.timeout_thread:
             while self.timeout_thread.is_alive():
@@ -27,7 +28,7 @@ class Animator(Interface):
         self.timeout_thread = Thread(target=self.timeout_timer, daemon=True)
         self.timeout_thread.start()
 
-        self.animation_thread = Thread(target=func, daemon=True)
+        self.animation_thread = Thread(target=func, kwargs=kwargs, daemon=True)
         self.animation_thread.start()
 
     def timeout_timer(self):
@@ -139,13 +140,22 @@ class Animator(Interface):
             if repeat > 0:
                 count += 1
 
-    def stop(self):
+    def segment(self, color, num_leds=10, brightness=20):
+        self.set_brightness(brightness)
+
+        for i in range(num_leds):
+            self.image[i] = color
+
+        self.set_image()
+
+    def stop(self, clear_leds=True):
         self.is_running = False
         if self.animation_thread:
             while self.animation_thread.is_alive():
                 sleep(0.01)
-
-        self.clear_leds()
+    
+        if clear_leds:
+            self.clear_leds()
         
     def set_image(self):
         for led, color in enumerate(self.image[:self.num_leds]):

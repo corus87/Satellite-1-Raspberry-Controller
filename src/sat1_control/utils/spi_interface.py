@@ -1,26 +1,54 @@
 import spidev
+from threading import Lock
 
-SPI_BUS = 0
-SPI_DEVICE = 0
-SPI_SPEED_HZ = 10000000 #10 MHz
-REGISTER_LEN = 4
-CONTROL_CMD_READ_BIT = 0x80
-DC_STATUS_REGISTER_LEN = 4
+SPI_SPEED_HZ = 10_000_000
 
 class SpiInterface:
+    _instance = None
+    _initialized = False
+    _lock = Lock()
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
+        if self._initialized:
+            return
+
         self.spi = spidev.SpiDev()
-        self.spi.open(SPI_BUS, SPI_DEVICE)
+        self.spi.open(0, 0)
         self.spi.max_speed_hz = SPI_SPEED_HZ
         self.spi.mode = 0b00
 
-    def write(self, res_id, command, payload=[]):
-        tx_buffer = [res_id, command, len(payload)]
-        tx_buffer.extend(payload)
-        while len(tx_buffer) < DC_STATUS_REGISTER_LEN + 3:
-            tx_buffer.append(0)
-        return self.spi.xfer2(tx_buffer)
-    
+        self.dc_status = [0, 0, 0, 0]
+        self._initialized = True
+
+    def write(self, res_id, command, payload=None):
+        payload = payload or []
+        tx = [res_id, command, len(payload), *payload]
+        while len(tx) < 7:
+            tx.append(0)
+
+        with self._lock:
+            result = self.spi.xfer2(tx)
+
+        return result
+
     def request_status_register_update(self):
-        rx = self.write(0, 0)
-        return rx[2:2 + DC_STATUS_REGISTER_LEN]
+        tx = [1, 0x80, 0, 0, 0, 0, 0]
+
+        with self._lock:
+            rx = self.spi.xfer2(tx)
+
+        status = rx[2:6]
+
+        if status == [0, 0, 0, 0]:
+            return False  # no update
+
+        self.dc_status = status
+        return True
+
+    def get_status_register(self, index: int) -> int:
+        return self.dc_status[index]

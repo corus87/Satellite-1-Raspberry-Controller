@@ -1,15 +1,21 @@
 import queue as Queue
 from threading import Thread
-from time import sleep
+from dataclasses import dataclass
 
 from sat1_control.led.animator import Animator
+
+@dataclass
+class Pattern:
+    func: callable
+    kwargs: dict
 
 class LedController(Thread):
     def __init__(self, pattern="default", 
                        timeout=60):
         super(LedController, self).__init__(daemon=True)
         self.queue = Queue.Queue()
-        self.animator = Animator(timeout)
+        self.animator = Animator()
+        self.animator.timeout = timeout
         self.pattern = None
         self.is_running = False
         self.set_pattern(pattern) 
@@ -17,23 +23,43 @@ class LedController(Thread):
     def run(self):
         self.is_running = True
         while self.is_running:
-            func = self.queue.get()
-            self.animator.run(func)
+            pattern = self.queue.get()
+            self.animator.run(pattern.func, **pattern.kwargs)
 
-    def on_start(self):
-        self.queue.put(self.pattern.on_start)
+    def on_start(self, **kwargs):
+        self.queue.put(Pattern(func=self.pattern.on_start,
+                               kwargs=kwargs)
+        )
 
-    def on_error(self):
-        self.queue.put(self.pattern.on_error)
+    def on_error(self, **kwargs):
+        self.queue.put(Pattern(func=self.pattern.on_error,
+                               kwargs=kwargs)
+        )
 
-    def listen(self):
-        self.queue.put(self.pattern.listen)
-        
-    def think(self):
-        self.queue.put(self.pattern.think)
+    def listen(self, **kwargs):
+        self.queue.put(Pattern(func=self.pattern.listen,
+                               kwargs=kwargs)
+        )
 
-    def speak(self):
-        self.queue.put(self.pattern.speak)
+    def think(self, **kwargs):
+        self.queue.put(Pattern(func=self.pattern.think,
+                               kwargs=kwargs)
+        )
+
+    def speak(self, **kwargs):
+        self.queue.put(Pattern(func=self.pattern.speak,
+                               kwargs=kwargs)
+        )
+
+    def on_mute(self, **kwargs):
+        self.queue.put(Pattern(func=self.pattern.on_mute,
+                               kwargs=kwargs)
+        )
+    
+    def on_volume_change(self, **kwargs):
+        self.queue.put(Pattern(func=self.pattern.on_volume_change,
+                               kwargs=kwargs)
+        )
 
     def off(self):
         self.animator.stop()
