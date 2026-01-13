@@ -4,6 +4,7 @@ from sat1_control.utils.spi_interface import SpiInterface
 GPIO_PORT_IN_A = 1
 GPIO_PORT_IN_B = 2
 
+STABLE_SAMPLES = 2
 
 @dataclass
 class ButtonState:
@@ -31,7 +32,13 @@ class Buttons:
             "mute": False,
         }
  
-        self._pending_edge = {
+        self._stable_count = {
+            "action": 0,
+            "down": 0,
+            "up": 0,
+        }
+
+        self._last_raw = {
             "action": False,
             "down": False,
             "up": False,
@@ -45,28 +52,34 @@ class Buttons:
 
     def _read_button(self, name: str, value: bool) -> ButtonState:
         prev = self._state[name]
+
+        # track raw stability
+        if value == self._last_raw[name]:
+            if self._stable_count[name] < STABLE_SAMPLES:
+                self._stable_count[name] += 1
+        else:
+            self._last_raw[name] = value
+            self._stable_count[name] = 1
+
         pressed_edge = False
         released_edge = False
 
-        if value and not prev:
-            # first sighting of press → mark pending
-            if self._pending_edge[name]:
-                pressed_edge = True
-                self._pending_edge[name] = False
-            else:
-                self._pending_edge[name] = True
+        # confirm press only if stable
+        if (
+            value
+            and not prev
+            and self._stable_count[name] >= STABLE_SAMPLES
+        ):
+            pressed_edge = True
+            self._state[name] = True
 
+        # release does NOT need stability (usually clean)
         elif not value and prev:
             released_edge = True
-            self._pending_edge[name] = False
-
-        elif not value:
-            self._pending_edge[name] = False
-
-        self._state[name] = value
+            self._state[name] = False
 
         return ButtonState(
-            pressed=value,
+            pressed=self._state[name],
             pressed_edge=pressed_edge,
             released_edge=released_edge,
         )
@@ -100,3 +113,4 @@ class Buttons:
     def mute(self) -> StateButtonState:
         value = self._read_cached(GPIO_PORT_IN_A, 2, False)
         return self._read_state_button("mute", value)
+        
