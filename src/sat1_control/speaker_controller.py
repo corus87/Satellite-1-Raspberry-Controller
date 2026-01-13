@@ -1,9 +1,12 @@
-from time import time, sleep
+import os
+
+from pathlib import Path
 from threading import Thread
+
+from time import time, sleep
 
 from sat1_control.tas2780 import Tas2780
 from sat1_control.buttons import Buttons
-from sat1_control.utils.utils import Utils
 from sat1_control.led_controller import LedController
 
 def volume_to_leds(volume: float, total_leds: int = 24) -> int:
@@ -15,23 +18,26 @@ class SpeakerController:
     def __init__(self, amp_level=20, 
                        power_mode=2,
                        volume_step=0.05, 
-                       volume=None):
+                       volume=None,
+                       state_path=None):
 
         self.button_control_running = False
-
+        
         self.volume_step = volume_step
         self.tas = Tas2780()
 
+        self.state_path = Path(state_path) if state_path else self._default_state_path()
+
         if volume is None:
-            volume = Utils.get_volume_state() 
-        
+            volume = self._load_volume_state()
+
+        self.set_volume(volume)
+
         self.tas.setup()
         self.tas.activate()            
         
         self.tas.amp_level = amp_level
         self.tas.power_mode = power_mode
-
-        self.set_volume(volume)
 
         self.btn = Buttons()
         if self.btn.mute.pressed:
@@ -53,12 +59,12 @@ class SpeakerController:
                 Thread(target=self._button_control, daemon=True).start()
 
     def increase_volume(self):
-        current_vol = Utils.get_volume_state()
+        current_vol = self._load_volume_state()
         if current_vol < 1:
             self.set_volume(current_vol + self.volume_step)
     
     def decrease_volume(self):
-        current_vol = Utils.get_volume_state()
+        current_vol = self._load_volume_state()
         if current_vol > 0:
             self.set_volume(current_vol - self.volume_step)
 
@@ -66,7 +72,7 @@ class SpeakerController:
         self.tas.deactivate()
     
     def set_volume(self, volume):
-        Utils.save_volume_state(volume)
+        self._save_volume_state(volume)
 
         self.tas.volume = volume
         self.tas.write_volume()
@@ -84,7 +90,7 @@ class SpeakerController:
         if animation == "show_volume":
             num_on_leds = volume_to_leds(self.volume)
             self.led.on_volume_change(num_leds=num_on_leds,
-                                      clear_leds=False)
+                                      reset_leds=False)
         
         elif animation == "on_mute":
             self.led.on_mute()
@@ -134,9 +140,30 @@ class SpeakerController:
 
         self.button_control_running = False
 
+    def _default_state_path(self):
+        base = os.environ.get("XDG_CACHE_HOME")
+        if not base:
+            base = Path.home() / ".cache"
+
+        path = Path(base) / "sat1" / "speaker"
+        path.mkdir(parents=True, exist_ok=True)
+        return path / "volume"
+        
+    def _load_volume_state(self):
+        try:
+            value = float(self.state_path.read_text())
+            return min(max(value, 0.0), 1.0)
+        except Exception:
+            self._save_volume_state(0.8)
+            return 0.8
+
+    def _save_volume_state(self, volume):
+        volume = min(max(float(volume), 0.0), 1.0)
+        self.state_path.write_text(str(volume))
+
     @property
     def volume(self):
-        return Utils.get_volume_state()
+        return self._load_volume_state()
 
     @property
     def is_active(self):

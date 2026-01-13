@@ -30,6 +30,12 @@ class Buttons:
             "up": False,
             "mute": False,
         }
+ 
+        self._pending_edge = {
+            "action": False,
+            "down": False,
+            "up": False,
+        }
 
     def _read_cached(self, port: int, pin: int, inverted: bool) -> bool:
         self.spi.request_status_register_update()
@@ -39,12 +45,30 @@ class Buttons:
 
     def _read_button(self, name: str, value: bool) -> ButtonState:
         prev = self._state[name]
+        pressed_edge = False
+        released_edge = False
+
+        if value and not prev:
+            # first sighting of press → mark pending
+            if self._pending_edge[name]:
+                pressed_edge = True
+                self._pending_edge[name] = False
+            else:
+                self._pending_edge[name] = True
+
+        elif not value and prev:
+            released_edge = True
+            self._pending_edge[name] = False
+
+        elif not value:
+            self._pending_edge[name] = False
+
         self._state[name] = value
 
         return ButtonState(
             pressed=value,
-            pressed_edge=value and not prev,
-            released_edge=not value and prev,
+            pressed_edge=pressed_edge,
+            released_edge=released_edge,
         )
 
     def _read_state_button(self, name: str, value: bool) -> StateButtonState:

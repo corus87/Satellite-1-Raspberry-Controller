@@ -1,4 +1,4 @@
-from time import sleep, time
+from time import sleep, monotonic
 from threading import Thread
 
 from sat1_control.led.interface import Interface
@@ -9,13 +9,20 @@ class Animator(Interface):
         self.is_running = False
         self.animation_thread = None
         self.timeout_thread = None
-        self.timeout = 60
-
+        self.default_timeout = 60
+        self.timeout = self.default_timeout
+    
     def run(self, func, **kwargs):
-        clear_leds = kwargs.get("clear_leds", True)
+        reset_leds = kwargs.get("reset_leds", True)
+        timeout = kwargs.get("timeout")
+
+        if timeout is not None and isinstance(timeout, int):
+            self.timeout = timeout
+        else:
+            self.timeout = self.default_timeout
 
         if self.is_running:
-            self.stop(clear_leds)
+            self.stop(reset_leds)
 
         if self.timeout_thread:
             while self.timeout_thread.is_alive():
@@ -32,12 +39,12 @@ class Animator(Interface):
         self.animation_thread.start()
 
     def timeout_timer(self):
-        timeout = time() + self.timeout
+        deadline = monotonic() + self.timeout
         while self.is_running:
-            if timeout < time():
+            if monotonic() >= deadline:
+                self.stop()
                 break
             sleep(0.1)
-        self.stop()
 
     def wheel(self, pos):
         if pos < 0 or pos > 255:
