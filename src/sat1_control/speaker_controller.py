@@ -26,18 +26,18 @@ class SpeakerController:
         self.volume_step = volume_step
         self.tas = Tas2780()
 
+        self.tas.amp_level = amp_level
+        self.tas.power_mode = power_mode
+        
+        self.tas.setup()
+        self.tas.activate()   
+
         self.state_path = Path(state_path) if state_path else self._default_state_path()
 
         if volume is None:
             volume = self._load_volume_state()
-
-        self.set_volume(volume)
-
-        self.tas.setup()
-        self.tas.activate()            
         
-        self.tas.amp_level = amp_level
-        self.tas.power_mode = power_mode
+        self.set_volume(volume)
 
         self.btn = Buttons()
         if self.btn.mute.pressed:
@@ -73,7 +73,6 @@ class SpeakerController:
     
     def set_volume(self, volume):
         self._save_volume_state(volume)
-
         self.tas.volume = volume
         self.tas.write_volume()
 
@@ -154,6 +153,7 @@ class SpeakerController:
             value = float(self.state_path.read_text())
             return min(max(value, 0.0), 1.0)
         except Exception:
+            print("error")
             self._save_volume_state(0.8)
             return 0.8
 
