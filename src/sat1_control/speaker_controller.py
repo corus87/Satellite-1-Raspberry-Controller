@@ -15,8 +15,8 @@ def volume_to_leds(volume: float, total_leds: int = 24) -> int:
 
 
 class SpeakerController:
-    def __init__(self, amp_level=20, 
-                       power_mode=2,
+    def __init__(self, amp_level=10, 
+                       power_mode=0,
                        volume_step=0.05, 
                        volume=None,
                        state_path=None):
@@ -24,8 +24,9 @@ class SpeakerController:
         self.button_control_running = False
         
         self.volume_step = volume_step
-        self.tas = Tas2780()
 
+        self.tas = Tas2780()
+        
         self.tas.amp_level = amp_level
         self.tas.power_mode = power_mode
         
