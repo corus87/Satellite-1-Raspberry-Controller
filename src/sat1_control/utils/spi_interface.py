@@ -1,7 +1,7 @@
 import spidev
 from threading import Lock
 
-SPI_SPEED_HZ = 10_000_000
+SPI_SPEED_HZ = 100_000
 
 class SpiInterface:
     _instance = None
