@@ -1,125 +1,129 @@
 # Satellite 1 Raspberry Controller
 
-Use a Raspberry Pi to have basic control over the [Satellite 1 HAT by FutureProofHomes](https://futureproofhomes.net/).  
-Tested on Raspberry OS 13 (trixie) (32Bit) - Raspberry Pi Zero 2 W
+Control the [Satellite 1 HAT by FutureProofHomes](https://futureproofhomes.net/) from a Raspberry Pi.
 
-### Usage
-To activate the speaker, run:  
-```bash
-pi@test-pi:~ $ sat1_venv/bin/sat1-control speaker
-Speaker enabled
-```
+Tested on Raspberry Pi OS 13 (Trixie) 32-bit — Raspberry Pi Zero 2 W.
 
-Record a sample and play: 
-```
-arecord  -f S16_LE -r 48000 -c 1 -t wav -d 5 test.wav
-aplay test.wav
-```
+---
 
 ### Install
 
-Install dependencies 
+Install system dependencies:
 ```bash
 sudo apt install python3-dev git
 ```
 
-Create a virtualenv and install the controller
+Create a virtualenv and install:
 ```bash
 python -m venv sat1_venv
 sat1_venv/bin/pip install git+https://github.com/corus87/Satellite-1-Raspberry-Controller
 ```
 
-### CLI Usage
+---
 
-Make sure you meet the [requirements](#requirements).
+### Usage as a library
 
-If you installed the Satellite 1 Controller in a virtualenv, you will find an executable e.g. ```~/sat1_venv/bin/sat1-control```
+```python
+from sat1_control import LedController, SpeakerController, Buttons
+from time import sleep
 
+# LED animations
+led = LedController(timeout=30)
+led.listen()
+led.wait()
+led.off()
 
-```bash
-usage: sat1-control [-h] [--led] [--speaker] {led,speaker} ...
+# Speaker
+spk = SpeakerController()
+spk.set_volume(0.7)
+spk.increase_volume()
+spk.decrease_volume()
+spk.mute_on()
+spk.mute_off()
+print(spk.volume)
 
-positional arguments:
-  {led,speaker}  Choose action.
-
-options:
-  -h, --help     show this help message and exit
-  --led          Run LED Pattern
-  --speaker      Control Speaker
+# Buttons
+btn = Buttons()
+while True:
+    if btn.up.pressed_edge:
+        spk.increase_volume()
+    if btn.down.pressed_edge:
+        spk.decrease_volume()
+    if btn.mute.pressed:
+        spk.mute_on()
+    sleep(0.05)
 ```
 
-```bash
-usage: sat1-control led [-h] --animation {on_start,on_error,listen,think,speak,off} [--timeout TIMEOUT] [--pattern {default}]
+---
 
-options:
-  -h, --help            show this help message and exit
-  --animation, -a {on_start,on_error,listen,think,speak,off}
-                        Choose animation
-  --timeout, -t TIMEOUT
-                        Timeout when animation ends
-  --pattern, -p {default}
-                        Pattern to use
-
-```
+### CLI
 
 ```bash
-usage: sat1-control speaker [-h] [--set-volume SET_VOLUME] [--increase] [--decrease] [--mute_on] [--mute_off] [--button_control] [--get_volume]
+sat1-control led --animation listen --timeout 30
+sat1-control led --animation think
+sat1-control led --animation speak
+sat1-control led --animation on_error
+sat1-control led --animation off
 
-options:
-  -h, --help            show this help message and exit
-  --set-volume, -v SET_VOLUME
-                        Set volume between 0-1
-  --increase, -i        Increase Volume
-  --decrease, -d        Decrease Volume
-  --mute_on, -m         Mute on
-  --mute_off, -u        Mute off
-  --button_control, -b  Control volume with HW buttons (Left: Mute/Unmute, Up: Increase volume, Down: Decrease volume)
-  --get_volume, -g      Get volume
+sat1-control speaker --set-volume 0.7
+sat1-control speaker --increase
+sat1-control speaker --decrease
+sat1-control speaker --mute-on
+sat1-control speaker --mute-off
+sat1-control speaker --get-volume
 ```
 
-### Requirements
+**LED options:**
+```
+--animation, -a  on_start | on_error | listen | think | speak | off
+--timeout,   -t  Auto-stop timeout in seconds (default: 10)
+--pattern,   -p  Pattern to use (default: default)
+```
 
-In order to use the speaker and microphone, we need an appropriate device tree overlay. We can use [this basic](https://github.com/AkiyukiOkayasu/RaspberryPi_I2S_Slave) overlay.
+**Speaker options:**
+```
+--set-volume, -v  Set volume 0.0–1.0
+--increase,   -i  Increase volume by one step
+--decrease,   -d  Decrease volume by one step
+--mute-on,    -m  Mute
+--mute-off,   -u  Unmute
+--get-volume, -g  Print current volume
+```
 
-Run the following commands to setup the PI.
+---
 
-Compile and write the overlay to /boot/overlays  
+### Audio setup (I2S / ALSA)
 
+To use the speaker and microphone, a device tree overlay is required.
+
+Compile and install the overlay:
 ```bash
 wget https://raw.githubusercontent.com/corus87/Satellite-1-Raspberry-Controller/refs/heads/main/extras/genericstereoaudiocodec.dts -O /tmp/genericstereoaudiocodec.dts
 sudo dtc -@ -H epapr -O dtb -o /boot/overlays/genericstereoaudiocodec.dtbo -Wno-unit_address_vs_reg /tmp/genericstereoaudiocodec.dts
 ```
 
-Edit /boot/firmware/config.txt  
-Enable/Uncomment I2S, SPI, I2C and add device tree overlay
-
-```bash
-# Uncomment some or all of these to enable the optional hardware interfaces
+Edit `/boot/firmware/config.txt` — enable I2C, I2S, SPI and add the overlay:
+```
 dtparam=i2c_arm=on
 dtparam=i2s=on
 dtparam=spi=on
-...
+
 [all]
 dtoverlay=genericstereoaudiocodec
 ```
 
-To be able to change the speaker and microphone volume via ALSA, you can use a asoundrc which does the following:
-
-- Created two soft volumes mixer (playback and capture).
-- Using dsnooper and dmixer to use the device by more then one application.
-- Sets the the microphone and playback device as default.
-- Sets the sample rate to 48khz
-
-Get the asoundrc and write to users home directory 
-
+Optionally install the ALSA config for software volume control, multi-app access and 48 kHz default:
 ```bash
 wget https://raw.githubusercontent.com/corus87/Satellite-1-Raspberry-Controller/refs/heads/main/extras/asoundrc -O ~/.asoundrc
 ```
 
-Reboot the PI 
-
+Reboot:
 ```bash
 sudo reboot
 ```
 
-
+Record and play back a test sample:
+```bash
+arecord -f S16_LE -r 48000 -c 1 -t wav -d 5 test.wav
+aplay test.wav
+```

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sat1-control"
+version = "2.0.0"
+description = "Basic control for FutureProofHomes Satellite 1 with a Raspberry Pi"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Corus87" }]
+requires-python = ">=3.11"
+dependencies = [
+    "smbus2>=0.4",
+    "spidev>=3.6 ; sys_platform == 'linux'",
+]
+
+[project.urls]
+Repository = "https://github.com/corus87/Satellite-1-Raspberry-Controller/"
+
+[project.scripts]
+sat1-control = "sat1_control.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sat1_control*"]
