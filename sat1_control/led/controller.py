@@ -57,7 +57,7 @@ class LedController:
         self.animator.run(self.pattern.on_mute, **kwargs)
 
     def on_volume_change(self, **kwargs):
-        self.animator.run(self.pattern.on_volume_change, reset_leds=False, timeout=5, **kwargs)
+        self.animator.run(self.pattern.on_volume_change, **kwargs)
 
     def off(self):
         self.animator.stop()
