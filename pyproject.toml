@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sat1-control"
-version = "2.0.0"
+version = "2.0.1"
 description = "Basic control for FutureProofHomes Satellite 1 with a Raspberry Pi"
 readme = "README.md"
 license = { text = "MIT" }

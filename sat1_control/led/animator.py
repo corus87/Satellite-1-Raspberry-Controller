@@ -34,7 +34,7 @@ class Animator:
     def is_running(self) -> bool:
         return self._is_running
 
-    def run(self, func: Callable, *, reset_leds: bool = True, timeout: int | None = None, **kwargs):
+    def run(self, func, *, reset_leds: bool = True, timeout: int | None = None, **kwargs):
         if self._is_running:
             self.stop(reset_leds)
 
@@ -73,6 +73,7 @@ class Animator:
 
     def clear(self):
         self.image = [(0, 0, 0)] * self.num_leds
+        time.sleep(0.05)
         self.show()
 
     def set_color(self, index: int, color: tuple[int, int, int]):
