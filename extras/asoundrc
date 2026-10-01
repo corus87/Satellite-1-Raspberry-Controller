@@ -24,7 +24,7 @@ pcm.dmixer {
         period_time 0
         period_size 1024
         buffer_size 4096
-        channels 2 
+        channels 2
     }
     bindings {
         0 0
@@ -35,10 +35,9 @@ pcm.dmixer {
 pcm.dsnooper {
     type dsnoop
     ipc_key 2048
-    ipc_perm 0666 
+    ipc_perm 0666
     slave.pcm "GenericStereoAu_capture"
-    slave 
-    {
+    slave {
         period_time 0
         period_size 1024
         buffer_size 4096
@@ -65,10 +64,20 @@ pcm.softvol_capture {
     }
 }
 
+# Left channel only: AEC+IC+NS+AGC, the ASR output of the XMOS
+pcm.sat1_mic {
+    type route
+    slave {
+        pcm "softvol_capture"
+        channels 2
+    }
+    ttable.0.0 1
+}
+
 pcm.duplex {
     type asym
     playback.pcm "softvol_playback"
-    capture.pcm "softvol_capture"
+    capture.pcm "sat1_mic"
 }
 
 pcm.!default {
